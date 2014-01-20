@@ -6,6 +6,10 @@ module ScalabilityTest
         @data = 0
       end
 
+      def self.key
+        raise NotImplementedError
+      end
+
       def setup
       end
 
@@ -20,6 +24,12 @@ module ScalabilityTest
       end
 
       def results
+      end
+
+      private
+
+      def duration(events)
+        events.inject(0) {|d, event| d += event['end'] - event['start'] }.round(3)
       end
     end
   end

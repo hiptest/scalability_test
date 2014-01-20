@@ -1,6 +1,7 @@
 require 'fileutils'
+require 'require_all'
 
-require 'monitors/*'
+require_rel 'monitors'
 
 module ScalabilityTest
   class Runner
@@ -8,22 +9,28 @@ module ScalabilityTest
       @frames = []
       monitored ||= [:sql, :render, :total]
 
-      ::Monitors.constants
-      monitors_mapping = {
-        :ajax => AjaxCallsMonitor,
-        :sql => SqlTimeMonitor,
-        :parsing => ParsingTimeMonitor,
-        :render => EmberRenderingTimeMonitor,
-        :total => TotalTimeMonitor,
-        :memory => MemoryUsageMonitor
-      }
-
-      @monitors = [IndexMonitor.new]
+      @monitors = [ScalabilityTest::Monitors::IndexMonitor.new]
       @monitors += monitors_mapping.values_at(*monitored).compact.map {|m| m.new(browser)}
     end
 
     def add_monitor(monitor)
       @monitors << monitor
+    end
+
+    def monitors_mapping
+      mapping = {}
+      ScalabilityTest::Monitors.constants.each do |cst|
+        next if cst == :ScalabilityMonitor
+        cls = ScalabilityTest::Monitors.const_get(cst)
+        if cls < ScalabilityTest::Monitors::ScalabilityMonitor
+          begin
+            mapping[cls.key] = cls
+          rescue NotImplementedError
+            next
+          end
+        end
+      end
+      mapping
     end
 
     def perf_data

@@ -1,12 +1,23 @@
 module ScalabilityTest
   module Monitors
-    class AjaxCallsMonitor < ScalabilityMonitor
+    class AjaxCallsMonitor < JavascriptMonitor
       def self.key
         :ajax
       end
 
-      def setup
-        @browser.execute_script(%Q#
+      def create_data_script
+        %Q#
+          ajaxPerfs = {
+            'calls': {},
+            'events': [],
+            'durations': []
+          };
+          ajaxStartTime = null;
+        #
+      end
+
+      def add_handlers_script
+        %Q#
           $(document).ajaxStart(function() {
             ajaxStartTime = +new Date();
           });
@@ -38,18 +49,7 @@ module ScalabilityTest
             };
             ajaxPerfs.events.push(event);
           });
-        #)
-      end
-
-      def start
-        @browser.execute_script(%Q#
-          ajaxPerfs = {
-            'calls': {},
-            'events': [],
-            'durations': []
-          };
-          ajaxStartTime = null;
-        #)
+        #
       end
 
       def results

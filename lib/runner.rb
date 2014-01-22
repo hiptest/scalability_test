@@ -56,12 +56,22 @@ module ScalabilityTest
       File.open("#{dir}/#{title}.json", 'w') { |file| file.write(perf_data.to_json)}
     end
 
+    def loop_setup &proc
+      @loop_setup = proc
+    end
+
+    def loop_tearddown &proc
+      @loop_tearddown = proc
+    end
+
     def run count, &test_block
       @monitors.each(&:setup)
       count.times do |i|
+        @loop_setup.call(i) unless @loop_setup.nil?
         @monitors.each(&:start)
         test_block.call(i)
         @monitors.each(&:stop)
+        @loop_teardown.call(i) unless @loop_teardown.nil?
         frame = @monitors.map(&:results)
         @frames << frame
       end

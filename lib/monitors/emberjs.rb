@@ -1,12 +1,16 @@
 module ScalabilityTest
   module Monitors
-    class EmberRenderingTimeMonitor < ScalabilityMonitor
+    class EmberRenderingTimeMonitor < JavascriptMonitor
       def self.key
         :emberjs_render
       end
 
-      def setup
-        script = %Q|
+      def create_data_script
+        "emberjsScalabilityStats = [];"
+      end
+
+      def add_handlers_script
+        %Q|
           emberjsScalabilityStats = [];
           navigationStart = performance.timing.navigationStart;
 
@@ -26,12 +30,6 @@ module ScalabilityTest
               }
             }
           });|
-
-        @browser.execute_script(script)
-      end
-
-      def start
-        @browser.execute_script("emberjsScalabilityStats = [];")
       end
 
       def results
